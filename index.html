@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>40k battlescribe psy table</title>
+</head>
+
+<body>
+</body>
+<style>
+    @media print {
+        #root {
+            display: none
+        }
+    }
+</style>
+<script>
+    const root = document.createElement('div');
+    root.id = 'root'
+
+const extractPowers = () => {
+  const temp1 = [...document.querySelectorAll('th')]
+    .filter(td => td.textContent === 'Psychic Power')
+    .map(el => el.parentElement.parentElement.parentElement)
+    .map(el => {
+      return {
+        id: name + Math.floor(Math.random() * 1000000),
+        psycherName: el.parentElement.firstElementChild.innerText.split(
+          ' ['
+        )[0],
+        cast: [...el.nextElementSibling.querySelectorAll('th')]
+          .filter(th => th.innerText === 'Cast')[0]
+          .parentElement.parentElement.querySelector('tr+tr')
+          .querySelector('td+td').innerText,
+        deny: [...el.nextElementSibling.querySelectorAll('th')]
+          .filter(th => th.innerText === 'Deny')[0]
+          .parentElement.parentElement.querySelector('tr+tr')
+          .querySelector('td+td+td').innerText,
+        powers: [...el.querySelectorAll('tbody>tr')].slice(1).map(tr => ({
+          powerName: tr.querySelector('td').innerText,
+          charge: tr.querySelector('td+td').innerText,
+          range: tr.querySelector('td+td+td').innerText,
+        })),
+      };
+    });
+
+  const psycherPowers = temp1
+    .flatMap(psy => {
+      return psy.powers.map(power => ({
+        ...psy,
+        power,
+        powers: null,
+      }));
+    })
+    .sort((itemA, itemB) => {
+      if (itemA.power.powerName === 'Smite' && itemA.id === itemB.id) {
+        return 1;
+      } else if (itemB.power.powerName === 'Smite' && itemB.id === itemA.id) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
+
+  const table = document.createElement('table');
+  const idCache = new Set();
+
+  psycherPowers.forEach(
+    ({ id, cast, deny, psycherName, power: { powerName, charge, range } }) => {
+      const row = document.createElement('tr');
+      const cells = Array(6)
+        .fill()
+        .map(() => document.createElement('td'));
+
+      cells[0].innerText = psycherName + ` (${cast}/${deny})`;
+      cells[1].innerText =
+        // range === '18"' && charge === '5'
+        powerName === 'Smite'
+          ? powerName
+          : `${powerName} (${charge}/${range === 'N/A' ? '*' : range})`;
+      cells.slice(2).map(cell => (cell.innerText = '    '));
+
+      if (idCache.has(id)) {
+        cells.splice(0, 1);
+      } else {
+        cells[0].rowSpan = psycherPowers.filter(psy2 => id === psy2.id).length;
+        idCache.add(id);
+      }
+
+      cells.forEach(cell => row.appendChild(cell));
+      table.appendChild(row);
+    }
+  );
+
+  setTimeout(() => {
+    table.classList.add('abc');
+    root.remove()
+  }, 100);
+  const style = document.createElement('style');
+  style.innerText = `.abc td {
+    padding: 12px 24px;
+    border: 1px solid black;
+    min-width: 30px;
+    min-width: 30px;
+}`;
+  document.body.appendChild(table);
+  document.body.appendChild(style);
+};
+const fileUpload = document.createElement('input');
+fileUpload.type = 'file';
+fileUpload.addEventListener('change', () => {
+  const file = fileUpload.files[0];
+  const reader = new FileReader();
+  reader.readAsText(file);
+  reader.addEventListener('load', () => {
+    root.innerHTML = reader.result;
+    setTimeout(extractPowers, 0);
+  });
+});
+document.body.appendChild(root);
+root.appendChild(fileUpload);
+
+</script>
+
+</html>
