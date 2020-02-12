@@ -1,3 +1,5 @@
+import exampleHtml from './example.js';
+
 const battlescribeRoot = document.createElement('div');
 battlescribeRoot.id = 'root';
 const mainRoot = document.createElement('div');
@@ -93,6 +95,10 @@ const fileUpload = () => {
 
   return {
     promise: new Promise(rez => {
+      window.example = () => {
+        battlescribeRoot.innerHTML = exampleHtml;
+        rez();
+      };
       upload.addEventListener('change', () => {
         const file = upload.files[0];
         const reader = new FileReader();
@@ -106,18 +112,56 @@ const fileUpload = () => {
     upload,
   };
 };
-const cpMarkers = () => {
+const markersColumn = () => {
+  const markersRoot = document.createElement('div');
+  markersRoot.style.display = 'flex';
+  markersRoot.style.flexDirection = 'column';
+  markersRoot.style.alignItems = 'center';
+  markersRoot.style.paddingTop = '3px';
+
   const cpsContainer = document.createElement('div');
+  cpsContainer.style.marginBottom = '8px';
   cpsContainer.className = 'cpsContainer';
-  const markers = Array(9)
+  Array(9)
     .fill()
     .map(() => {
       const cpMarker = document.createElement('div');
       cpMarker.className = 'cpmarker';
       return cpMarker;
-    });
-  markers.forEach(marker => cpsContainer.appendChild(marker));
-  return cpsContainer;
+    })
+    .forEach(cpMarker => cpsContainer.appendChild(cpMarker));
+  const cpTxt = document.createElement('span');
+  cpTxt.innerText = 'CPs';
+  cpTxt.style.display = 'flex';
+  cpTxt.style.justifyContent = 'center';
+  cpTxt.style.marginBottom = '5px';
+  markersRoot.appendChild(cpTxt);
+  markersRoot.appendChild(cpsContainer);
+
+  const vpTxt = document.createElement('span');
+  vpTxt.innerText = 'VPs';
+
+  vpTxt.style.display = 'flex';
+  vpTxt.style.justifyContent = 'center';
+  vpTxt.style.marginBottom = '5px';
+  const vpsContainer = document.createElement('div');
+  vpsContainer.style.display = 'grid';
+  vpsContainer.style.gridTemplateColumns = 'min-content min-content';
+  vpsContainer.style.gridRowGap = '2px';
+  vpsContainer.style.gridColumnGap = '8px';
+  Array(12)
+    .fill()
+    .map(() => {
+      const vpMarker = document.createElement('span');
+      vpMarker.style.border = '1px solid black';
+      vpMarker.style.width = '16px';
+      vpMarker.style.height = '16px';
+      return vpMarker;
+    })
+    .forEach(vpMarker => vpsContainer.appendChild(vpMarker));
+  markersRoot.appendChild(vpTxt);
+  markersRoot.appendChild(vpsContainer);
+  return markersRoot;
 };
 
 const { promise, upload } = fileUpload();
@@ -128,7 +172,9 @@ document.body.appendChild(battlescribeRoot);
 
 promise.then(() => {
   const table = psychTable();
-  const markers = cpMarkers();
+  const markers = markersColumn();
   mainRoot.appendChild(table);
   mainRoot.appendChild(markers);
 });
+
+// setTimeout(() => window.example(), 200);
